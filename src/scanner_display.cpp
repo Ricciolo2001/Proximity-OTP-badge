@@ -232,16 +232,16 @@ void loop()
     {
         if (!sortedDevices.empty())
         {
-            DiffieHellman d;
+            DiffieHellman dh;
             DH_Message msg;
-            msg.p = d.getP();
-            msg.g = d.getG();
-            msg.publicKey = d.getPublicKey();
+            msg.p = dh.getP();
+            msg.g = dh.getG();
+            msg.publicKey = dh.getPublicKey();
 
             String targetName = sortedDevices.front().first;
-            uint32_t otherY = connectAndSendDHMessage(targetName, d, msg);
-            d.computeSharedKey(otherY);
-            Serial.println("Ciave calcolata: " + String(d.getSharedKey()));
+            uint32_t otherY = connectAndSendDHMessage(targetName, dh, msg);
+            dh.computeSharedKey(otherY);
+            Serial.println("Ciave calcolata: " + String(dh.getSharedKey()));
         }
         else
         {
