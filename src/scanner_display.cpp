@@ -13,7 +13,14 @@
 #define SCREEN_HEIGHT 32
 #define OLED_RESET -1
 
-#define BUTTON_PIN 0
+#define BUTTON_PIN 46
+
+typedef struct __attribute__((packed))
+{
+    uint32_t p;
+    uint32_t g;
+    uint32_t publicKey;
+} DH_Message;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,9 +54,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2C_OLED, OLED_RESET);
 
 BLEScan *pBLEScan;
 
-#define SERVICE_UUID           "12345678-1234-1234-1234-123456789abc"
-#define CHARACTERISTIC_WRITE   "abcd1234-1234-1234-1234-abcdefabcdef"
-#define CHARACTERISTIC_NOTIFY  "abcd5678-1234-1234-1234-abcdefabcdef"
+#define SERVICE_UUID "12345678-1234-1234-1234-123456789abc"
+#define CHARACTERISTIC_WRITE "abcd1234-1234-1234-1234-abcdefabcdef"
+#define CHARACTERISTIC_NOTIFY "abcd5678-1234-1234-1234-abcdefabcdef"
 
 float estimateDistance(int rssi)
 {
@@ -75,7 +82,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     }
 };
 
-void connectAndSendDHMessage(const String &deviceName, const DH_Message &msg)
+uint32_t connectAndSendDHMessage(const String &deviceName, DiffieHellman &d, const DH_Message &msg)
 {
     Serial.printf("Cerco di connettermi a %s...\n", deviceName.c_str());
 
@@ -90,7 +97,7 @@ void connectAndSendDHMessage(const String &deviceName, const DH_Message &msg)
             if (!pClient->connect(&dev))
             {
                 Serial.println("Connessione fallita.");
-                return;
+                return 0;
             }
 
             BLERemoteService *pService = pClient->getService(SERVICE_UUID);
@@ -98,27 +105,47 @@ void connectAndSendDHMessage(const String &deviceName, const DH_Message &msg)
             {
                 Serial.println("Servizio non trovato.");
                 pClient->disconnect();
-                return;
+                return 0;
             }
 
-            BLERemoteCharacteristic *pChar = pService->getCharacteristic(CHARACTERISTIC_WRITE);
-            if (!pChar)
+            // Scrittura messaggio DH
+            BLERemoteCharacteristic *pWriteChar = pService->getCharacteristic(CHARACTERISTIC_WRITE);
+            BLERemoteCharacteristic *pNotifyChar = pService->getCharacteristic(CHARACTERISTIC_NOTIFY);
+
+            if (!pWriteChar || !pNotifyChar)
             {
                 Serial.println("Caratteristica non trovata.");
                 pClient->disconnect();
-                return;
+                return 0;
             }
 
             // Invia messaggio DH
-            pChar->writeValue((uint8_t *)&msg, sizeof(DH_Message), false);
-            Serial.println("Messaggio DH inviato.");
+            pWriteChar->writeValue((uint8_t *)&msg, sizeof(DH_Message), false);
+            Serial.println("Messaggio DH inviato. Attendo risposta...");
+
+            // Leggi risposta Y
+            std::string value = pNotifyChar->readValue();
+            if (value.length() != sizeof(uint32_t))
+            {
+                Serial.println("Risposta DH non valida.");
+                pClient->disconnect();
+                return 0;
+            }
+
+            uint32_t receivedY;
+            memcpy(&receivedY, value.data(), sizeof(uint32_t));
+
+            // Calcolo chiave condivisa
+            uint32_t sharedKey = d.computeSharedKey(receivedY);
+            Serial.printf("Y ricevuto: %lu, Chiave condivisa: %lu\n", receivedY, sharedKey);
 
             pClient->disconnect();
-            return;
+            return receivedY;
         }
     }
 
     Serial.println("Dispositivo non trovato nella scansione.");
+    return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +239,9 @@ void loop()
             msg.publicKey = d.getPublicKey();
 
             String targetName = sortedDevices.front().first;
-            connectAndSendDHMessage(targetName, msg);
+            uint32_t otherY = connectAndSendDHMessage(targetName, d, msg);
+            d.computeSharedKey(otherY);
+            Serial.println("Ciave calcolata: " + String(d.getSharedKey()));
         }
         else
         {
@@ -222,10 +251,3 @@ void loop()
         delay(1000); // debounce
     }
 }
-
-typedef struct __attribute__((packed))
-{
-    uint32_t p;
-    uint32_t g;
-    uint32_t publicKey;
-} DH_Message;
