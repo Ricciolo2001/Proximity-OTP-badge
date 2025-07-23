@@ -1,0 +1,7 @@
+# Proximity OTP badge
+It's a new type of active badge developed to enshure maximum secureti in critical infrastructure accesses, it uses a 2.4GHz antenna to determine the distance from any infrastructure access, in this way it can guide an user to the designated point of interest, avoiding confusion on what point of interest an user wants to interact with.
+It is also spoofing resistant having a system to detect if two point of interest are too close to eachother, so the request will not be forwarded in this case. 
+The secrecy of the comunication is granted by the user of DH key exchange method and the auth is done using an otp generator.
+To fully secure the legittimacy of the code sent the OTP wil be presented to the user, that, after reading it, it is required to autenticate iself by applyng a transformation to the OTP generated (a secret that only the designated badge knows) and, in case of success, the access to the point will be granted.
+The code was initially designed for advanced farm equipment with the idea to protect expensive equipment from theft and from loosing it in the field, but, thanks to the BLE communication that features really low power consumption, it might be used in any battery powered application and in a more portable badge form making it really versatile for exchanging small packets of data containing identification messages
+> For example access control to buildings, active badge tracking or advanced parcel localization in wharehouses and shipping container.
