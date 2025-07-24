@@ -68,8 +68,8 @@ DiffieHellman::DiffieHellman()
     p = 23;
     g = 9;
 
-    p = generate_prime();
-    g = find_generator(p);
+    // p = generate_prime();
+    // g = find_generator(p);
     // Disabilitato per test
     privateKey = esp_random(); // TRNG
     publicKey = mod_exp(g, privateKey, p);
