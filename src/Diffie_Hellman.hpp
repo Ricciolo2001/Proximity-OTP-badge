@@ -1,7 +1,12 @@
 #ifndef DIFFIE_HELLMAN_H
 #define DIFFIE_HELLMAN_H
 
-#include <stdint.h> // Per uint32_t
+#include <stdint.h>
+#include <Arduino.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <XTEA-Cipher.h>
 
 typedef struct __attribute__((packed))
 {
@@ -10,11 +15,7 @@ typedef struct __attribute__((packed))
     uint32_t publicKey;
 } DH_Message;
 
-typedef struct __attribute__((packed))
-{
-    char username[16]; // nome utente
-    uint32_t otp; // otp XOR chiave condivisa
-} Auth_Message;
+
 
 class DiffieHellman
 {
@@ -23,7 +24,7 @@ private:
     long long int privateKey; // a
     long long int publicKey;  // g^a mod p
     long long int sharedKey;  // (Y^a mod p)
-    
+
 
     // Modular exponentiation (base^exp mod mod)
     long long int mod_exp(long long int base, long long int exp, long long int mod);
@@ -39,10 +40,6 @@ public:
     long long int getG() const;
     long long int getPublicKey() const;
     long long int getSharedKey() const;
-
-    // Communication
-    void createAutenticationMessage(Auth_Message msg);
-    Auth_Message recieveAutenticationMessage();
 };
 
 #endif // DIFFIE_HELLMAN_H

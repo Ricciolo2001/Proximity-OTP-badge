@@ -293,6 +293,8 @@
     "unordered_map": "cpp",
     "vector": "cpp",
     "string_view": "cpp",
-    "initializer_list": "cpp"
+    "initializer_list": "cpp",
+    "cstdio": "cpp",
+    "iosfwd": "cpp"
   }
 }

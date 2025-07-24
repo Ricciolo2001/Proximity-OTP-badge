@@ -1,13 +1,18 @@
-// ESP32_B_Scanner_Display.ino
 #include <Arduino.h>
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEScan.h>
+
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <map>
 #include "Diffie_Hellman.hpp"
+#include "SecureOTPGenerator.hpp"
+#include "AES_comunication.hpp"
+#include "Autentication_Protocol.hpp"
+#undef NULL
+#define NULL nullptr
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
@@ -15,12 +20,9 @@
 
 #define BUTTON_PIN 46
 
-typedef struct __attribute__((packed))
-{
-    uint32_t p;
-    uint32_t g;
-    uint32_t publicKey;
-} DH_Message;
+#define DEVICE_NAME "Scanner01"
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -82,8 +84,23 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     }
 };
 
-uint32_t connectAndSendDHMessage(const String &deviceName, DiffieHellman &d, const DH_Message &msg)
+
+// OTP generator
+
+SecureOTPGenerator otpGen = SecureOTPGenerator(DEVICE_NAME);
+
+// Communication
+
+void sendCommand(const String &deviceName)
 {
+    DiffieHellman dh = DiffieHellman();
+    DH_Message msg;
+    msg.p = dh.getP();
+    msg.g = dh.getG();
+    msg.publicKey = dh.getPublicKey();
+
+    // Connects using DH to a service
+
     Serial.printf("Cerco di connettermi a %s...\n", deviceName.c_str());
 
     BLEScanResults results = pBLEScan->getResults();
@@ -97,7 +114,7 @@ uint32_t connectAndSendDHMessage(const String &deviceName, DiffieHellman &d, con
             if (!pClient->connect(&dev))
             {
                 Serial.println("Connessione fallita.");
-                return 0;
+                return;
             }
 
             BLERemoteService *pService = pClient->getService(SERVICE_UUID);
@@ -105,7 +122,7 @@ uint32_t connectAndSendDHMessage(const String &deviceName, DiffieHellman &d, con
             {
                 Serial.println("Servizio non trovato.");
                 pClient->disconnect();
-                return 0;
+                return;
             }
 
             // Scrittura messaggio DH
@@ -116,36 +133,79 @@ uint32_t connectAndSendDHMessage(const String &deviceName, DiffieHellman &d, con
             {
                 Serial.println("Caratteristica non trovata.");
                 pClient->disconnect();
-                return 0;
+                return;
             }
 
-            // Invia messaggio DH
+            // Send DH message
             pWriteChar->writeValue((uint8_t *)&msg, sizeof(DH_Message), false);
             Serial.println("Messaggio DH inviato. Attendo risposta...");
 
-            // Leggi risposta Y
+            // Reads Y
             std::string value = pNotifyChar->readValue();
             if (value.length() != sizeof(uint32_t))
             {
                 Serial.println("Risposta DH non valida.");
                 pClient->disconnect();
-                return 0;
+                return;
             }
 
             uint32_t receivedY;
             memcpy(&receivedY, value.data(), sizeof(uint32_t));
 
-            // Calcolo chiave condivisa
-            uint32_t sharedKey = d.computeSharedKey(receivedY);
+            // Creates shared key
+            uint32_t sharedKey = dh.computeSharedKey(receivedY);
             Serial.printf("Y ricevuto: %lu, Chiave condivisa: %lu\n", receivedY, sharedKey);
 
+            otpGen = SecureOTPGenerator(69, DEVICE_NAME); // TODO Da implementare meglio
+            uint8_t otp = otpGen.generateOTP();
+
+            // Initialize simmetric communication
+
+            uint8_t iv[4];
+            memcpy(iv, &otp, sizeof(otp));
+
+            uint8_t key[8];
+            memcpy(key, &sharedKey, sizeof(sharedKey));
+
+            CfbCipher cfbToken = CfbCipher(key, iv);
+
+            // Send autentication challenge to server
+            // N.B. the otp is used only as an iv to inizialize the communication
+
+            int32_t challengeVal = esp_random(); // TRNG
+
+            char *authMSG = createAutenticationMessage(challengeVal, DEVICE_NAME);
+            size_t totalLen = strlen(DEVICE_NAME) + 1 + strlen(authMSG) + 1;
+            char *buffer = (char *)malloc(totalLen);
+            sprintf(buffer, "%s|%s", DEVICE_NAME, authMSG);
+            pWriteChar->writeValue(buffer);
+
+            Serial.println("Messaggio di autenticazione inviato. Attendo risposta...");
+
+            // Leggi risposta
+            value = pNotifyChar->readValue();
+            if (value.length() != sizeof(uint32_t))
+            {
+                Serial.println("Risposta non valida.");
+                pClient->disconnect();
+                return;
+            }
+            int32_t challengeResponse;
+            memcpy(&challengeResponse, value.data(), sizeof(uint32_t));
+            if (challengeResponse == challengeVal + 1)
+            {
+                Serial.println("Autenticato correttamente");
+                // * From this point we will have to build some sort of application specific code or command
+            }
+            else
+                Serial.println("Errore di autenticazione da server");
+
             pClient->disconnect();
-            return receivedY;
         }
     }
 
     Serial.println("Dispositivo non trovato nella scansione.");
-    return 0;
+    return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +245,7 @@ void setup()
 
 void loop()
 {
-    pBLEScan->start(1, false); // scansione per 1 secondo
+    pBLEScan->start(1); // scansione per 1 secondo
 
     unsigned long time_now = millis();
     auto it = devices.begin();
@@ -232,16 +292,8 @@ void loop()
     {
         if (!sortedDevices.empty())
         {
-            DiffieHellman dh;
-            DH_Message msg;
-            msg.p = dh.getP();
-            msg.g = dh.getG();
-            msg.publicKey = dh.getPublicKey();
-
             String targetName = sortedDevices.front().first;
-            uint32_t otherY = connectAndSendDHMessage(targetName, dh, msg);
-            dh.computeSharedKey(otherY);
-            Serial.println("Ciave calcolata: " + String(dh.getSharedKey()));
+            sendCommand(targetName);
         }
         else
         {

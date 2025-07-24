@@ -25,7 +25,7 @@ void SecureOTPGenerator::saveCounter() {
 }
 
 uint32_t SecureOTPGenerator::generateOTP() {
-    // TODO otp using SHA256 or other cryptographic secured PRNG generators. In a real implementation i would consider also to use a TOTP (time based otp)
+    // TODO otp using SHA256 or other cryptographic secured PRNG generators.
     uint32_t otp = seed ^ (counter * 2654435761UL); // Moltiplicazione con numero di Knuth
     counter++;
     saveCounter();

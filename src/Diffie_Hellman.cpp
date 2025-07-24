@@ -1,5 +1,4 @@
 #include <Diffie_Hellman.hpp>
-#include <string.h>
 
 // Modular exponentiation
 long long int DiffieHellman::mod_exp(long long int base, long long int exp, long long int mod)
@@ -47,13 +46,3 @@ long long int DiffieHellman::getP() const { return p; }
 long long int DiffieHellman::getG() const { return g; }
 long long int DiffieHellman::getPublicKey() const { return publicKey; }
 long long int DiffieHellman::getSharedKey() const { return sharedKey; }
-
-// Communication
-void createAutenticationMessage(const String &username)
-{
-    
-}
-
-Auth_Message recieveAutenticationMessage()
-{
-}
