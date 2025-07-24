@@ -12,21 +12,21 @@ SecureOTPGenerator::SecureOTPGenerator(const String& storageNamespace):storageKe
 
 void SecureOTPGenerator::loadCounter() {
     Preferences prefs;
-    prefs.begin(storageKey.c_str(), true); // read-only
+    prefs.begin(storageKey.c_str(), true);
     counter = prefs.getUInt("ctr", 0);
     prefs.end();
 }
 
 void SecureOTPGenerator::saveCounter() {
     Preferences prefs;
-    prefs.begin(storageKey.c_str(), false); // read-write
+    prefs.begin(storageKey.c_str(), false);
     prefs.putUInt("ctr", counter);
     prefs.end();
 }
 
 uint32_t SecureOTPGenerator::generateOTP() {
     // TODO otp using SHA256 or other cryptographic secured PRNG generators.
-    uint32_t otp = seed ^ (counter * 2654435761UL); // Moltiplicazione con numero di Knuth
+    uint32_t otp = seed ^ (counter * 2654435761UL); // Moltiplicazione con numero di Knuth non ideale
     counter++;
     saveCounter();
     return otp;

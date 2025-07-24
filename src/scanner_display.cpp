@@ -22,8 +22,6 @@
 
 #define DEVICE_NAME "Scanner01"
 
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Scanned devices
@@ -84,10 +82,13 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // OTP generator
 
 SecureOTPGenerator otpGen = SecureOTPGenerator(DEVICE_NAME);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Communication
 
@@ -158,6 +159,9 @@ void sendCommand(const String &deviceName)
 
             otpGen = SecureOTPGenerator(69, DEVICE_NAME); // TODO Da implementare meglio
             uint8_t otp = otpGen.generateOTP();
+
+            //! La generazione di OTP sará piú complessa e dettata da un valore di ritorno dal dispositivo al quale ci vogliamo connettere (usiamo il loro counter)
+            //! Per mantenere la gestione (aggiunta rimozione) di nuovi dispositivi semplice, abbiamo dei file di codici precompialti presenti sui dispositivi (ancora da fare) 
 
             // Initialize simmetric communication
 

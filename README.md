@@ -38,5 +38,6 @@ Sensed devices wil be displayaed by an oled display and will be updated. (having
 
 
 <img src="ScannerFoto.jpg" > 
-
+ <img src="DH_completata.png" width="350">  
+ 
 The infrastructure reciever is just a simle toggle switch for a light.
