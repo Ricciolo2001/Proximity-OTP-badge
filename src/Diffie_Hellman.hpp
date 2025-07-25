@@ -15,8 +15,6 @@ typedef struct __attribute__((packed))
     uint32_t publicKey;
 } DH_Message;
 
-
-
 class DiffieHellman
 {
 private:
@@ -24,7 +22,6 @@ private:
     long long int privateKey; // a
     long long int publicKey;  // g^a mod p
     long long int sharedKey;  // (Y^a mod p)
-
 
     // Modular exponentiation (base^exp mod mod)
     long long int mod_exp(long long int base, long long int exp, long long int mod);

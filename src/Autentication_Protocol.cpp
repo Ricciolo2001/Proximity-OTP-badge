@@ -1,22 +1,23 @@
 #include "Autentication_Protocol.hpp"
 
-
-char *createAutenticationMessage(uint32_t otp, char *username)
+// Used to create the message that a clients want to send to the server
+char *createAutenticationMessage(uint32_t challengeVal, char *username)
 {
-    uint32_t challengeVal = esp_random(); // TRNG
     char challengeStr[12];
     sprintf(challengeStr, "%lu", (unsigned long)challengeVal);
 
     size_t totalLen = strlen(username) + 1 + strlen(challengeStr) + 1;
     char *message = (char *)malloc(totalLen);
-    if (!message) return nullptr;
+    if (!message)
+        return nullptr;
 
     sprintf(message, "%s|%lu", username, (unsigned long)challengeVal);
 
     return message; // Da liberare dal chiamante
 }
 
-Auth_Message processAutenticationMessage(uint32_t otp, char *username, uint8_t *msg)
+// Not used yet by the server, you can find a partial implementation from line 72 of the light_device.cpp file
+Auth_Message processAutenticationMessage(char *username, uint8_t *msg)
 {
     Auth_Message auth;
 

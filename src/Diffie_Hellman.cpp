@@ -17,7 +17,7 @@ long long int mod_exp(long long int base, long long int exp, long long int mod)
     return result;
 }
 
-// Trovato su un forum
+// test di primalità di Fermat (non l'ho ovviamente scritto io...)
 bool is_prime(uint64_t n, int iterations = 5)
 {
     std::mt19937 rng(std::random_device{}());
@@ -31,20 +31,21 @@ bool is_prime(uint64_t n, int iterations = 5)
     return true;
 }
 
-// Trovato su un forum
-uint64_t generate_prime(uint64_t min = 1000, uint64_t max = 5000)
+uint64_t generate_prime(uint64_t min = 1000, uint64_t max = 50000)
 {
     std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<uint64_t> dist(min, max);
-    while (true)
+
+    int attempts = 0;
+    while (attempts++ < 100000)
     {
-        uint64_t candidate = dist(rng) | 1; // forza l'impari
+        uint64_t candidate = dist(rng) | 1; // makes it not even
         if (is_prime(candidate))
             return candidate;
     }
+    return 1; // Dovrebbe essere un errore...ma preferisco infastidire i matematici
 }
 
-// Trovato su un forum
 uint64_t find_generator(uint64_t p)
 {
     for (uint64_t g = 2; g < p; ++g)
@@ -67,11 +68,12 @@ DiffieHellman::DiffieHellman()
 {
     p = 23;
     g = 9;
+    privateKey = 4;
 
     // p = generate_prime();
     // g = find_generator(p);
-    // Disabilitato per test
-    privateKey = esp_random(); // TRNG
+    // privateKey = esp_random(); // TRNG
+    // !Disabilitato per test, mi piacciono i valori prevedibiliii
     publicKey = mod_exp(g, privateKey, p);
 }
 
@@ -80,7 +82,10 @@ DiffieHellman::DiffieHellman(long long int prime, long long int generator, long 
 {
     p = prime;
     g = generator;
-    privateKey = esp_random(); // TRNG
+    // privateKey = esp_random(); // TRNG
+    // !Disabilitato per test, mi piacciono i valori prevedibiliii
+    privateKey = 4;
+
     publicKey = mod_exp(g, privateKey, p);
     sharedKey = computeSharedKey(otherPublicKey);
 }

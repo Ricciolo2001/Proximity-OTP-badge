@@ -88,18 +88,18 @@ class MyCallbacks : public BLECharacteristicCallbacks
     {
       Serial.println("Richiesta di autenticazione ricevuta");
 
-      // Ricevi DH_Message
+      // Recieve DH_Message
       DH_Message msg;
       memcpy(&msg, value.data(), sizeof(DH_Message));
 
       Serial.println("Ricevuto -> p: " + String(msg.p) + ", g: " + String(msg.g) + ", Y: " + String(msg.publicKey));
 
-      // Configura DH con p/g ricevuti
+      // Configures DH with recieved parameters
       dh = DiffieHellman(msg.p, msg.g, msg.publicKey);
 
       Serial.println("Chiave condivisa calcolata:" + String(dh.getSharedKey()));
 
-      // Invia la nostra chiave pubblica (Y) come notifica
+      // Sends (Y)
       uint32_t ourPublicKey = dh.getPublicKey();
       pNotifyCharacteristic->setValue((uint8_t *)&ourPublicKey, sizeof(ourPublicKey));
       pNotifyCharacteristic->notify();
@@ -119,7 +119,7 @@ class MyServerCallbacks : public BLEServerCallbacks
   void onDisconnect(BLEServer *pServer) override
   {
     Serial.println("Client disconnesso. Riavvio advertising...");
-    delay(500); // breve attesa prima di ripartire
+    delay(500); // Short wait
     BLEDevice::startAdvertising();
   }
 };
@@ -132,7 +132,7 @@ void setup()
   BLEDevice::init("ESP32_Responder");
 
   BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks()); // <-- AGGIUNGI QUESTA RIGA
+  pServer->setCallbacks(new MyServerCallbacks());
 
   BLEService *pService = pServer->createService(SERVICE_UUID);
 

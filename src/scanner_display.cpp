@@ -161,7 +161,7 @@ void sendCommand(const String &deviceName)
             uint8_t otp = otpGen.generateOTP();
 
             //! La generazione di OTP sará piú complessa e dettata da un valore di ritorno dal dispositivo al quale ci vogliamo connettere (usiamo il loro counter)
-            //! Per mantenere la gestione (aggiunta rimozione) di nuovi dispositivi semplice, abbiamo dei file di codici precompialti presenti sui dispositivi (ancora da fare) 
+            //! Per mantenere la gestione (aggiunta rimozione) di nuovi dispositivi semplice, abbiamo dei file di codici precompialti presenti sui dispositivi (ancora da fare)
 
             // Initialize simmetric communication
 
@@ -186,7 +186,7 @@ void sendCommand(const String &deviceName)
 
             Serial.println("Messaggio di autenticazione inviato. Attendo risposta...");
 
-            // Leggi risposta
+            // Reads answer
             value = pNotifyChar->readValue();
             if (value.length() != sizeof(uint32_t))
             {
@@ -249,7 +249,7 @@ void setup()
 
 void loop()
 {
-    pBLEScan->start(1); // scansione per 1 secondo
+    pBLEScan->start(1); // scan for one second
 
     unsigned long time_now = millis();
     auto it = devices.begin();
@@ -288,7 +288,7 @@ void loop()
         display.printf("%s %.1fm\n", shortName.c_str(), info.distance);
         row++;
         if (row >= 3)
-            break; // max 3 righe per display 128x32
+            break; // max 3 lins per display 128x32
     }
 
     display.display();

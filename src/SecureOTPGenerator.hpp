@@ -12,6 +12,7 @@ private:
     String storageKey; // Name of the stored key
 
     // Load adnd saves status from NVS (internal persistant memory)
+    // In a future implementation i will use a file saved on memory so it will be updated more easly
 
     void loadCounter();
     void saveCounter();
@@ -21,8 +22,8 @@ public:
     SecureOTPGenerator(const String &storageNamespace);
 
     uint32_t generateOTP();
-    uint32_t peekOTP() const; // Current OTP code
-    void reset();             // Set Counter to zero
+    uint32_t peekOTP() const;         // Current OTP code
+    void reset(uint32_t counter = 0); // Set Counter to zero or counter val
     int getCounter();
 };
 
