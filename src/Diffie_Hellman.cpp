@@ -3,7 +3,7 @@
 #include <ctime>
 
 // Modular exponentiation
-long long int mod_exp(long long int base, long long int exp, long long int mod)
+long long int DiffieHellman::mod_exp(long long int base, long long int exp, long long int mod)
 {
     long long int result = 1;
     base = base % mod;
@@ -18,7 +18,7 @@ long long int mod_exp(long long int base, long long int exp, long long int mod)
 }
 
 // test di primalità di Fermat (non l'ho ovviamente scritto io...)
-bool is_prime(uint64_t n, int iterations = 5)
+bool DiffieHellman::is_prime(uint64_t n, int iterations = 5)
 {
     std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<uint64_t> dist(2, n - 2);
@@ -31,7 +31,7 @@ bool is_prime(uint64_t n, int iterations = 5)
     return true;
 }
 
-uint64_t generate_prime(uint64_t min = 1000, uint64_t max = 50000)
+uint64_t DiffieHellman::generate_prime(uint64_t min = 1000, uint64_t max = 50000)
 {
     std::mt19937 rng(std::random_device{}());
     std::uniform_int_distribution<uint64_t> dist(min, max);
@@ -46,7 +46,7 @@ uint64_t generate_prime(uint64_t min = 1000, uint64_t max = 50000)
     return 1; // Dovrebbe essere un errore...ma preferisco infastidire i matematici
 }
 
-uint64_t find_generator(uint64_t p)
+uint64_t DiffieHellman::find_generator(uint64_t p)
 {
     for (uint64_t g = 2; g < p; ++g)
     {

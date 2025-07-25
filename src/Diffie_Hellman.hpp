@@ -26,6 +26,12 @@ private:
     // Modular exponentiation (base^exp mod mod)
     long long int mod_exp(long long int base, long long int exp, long long int mod);
 
+    bool is_prime(uint64_t n, int iterations);
+
+    uint64_t generate_prime(uint64_t min, uint64_t max);
+
+    uint64_t find_generator(uint64_t p);
+
 public:
     // Builders
     DiffieHellman();
